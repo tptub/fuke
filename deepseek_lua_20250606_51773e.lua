@@ -1,0 +1,527 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- إنشاء ScreenGui مع إعدادات محسنة
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PlayerESPGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
+
+-- الإطار الرئيسي مع تصميم حديث
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 450)
+MainFrame.Position = UDim2.new(0.5, -160, 0.3, -225)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 8)
+mainCorner.Parent = MainFrame
+
+-- شريط العنوان مع تدرج لوني
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+TopBar.Parent = MainFrame
+
+local topBarCorner = Instance.new("UICorner")
+topBarCorner.CornerRadius = UDim.new(0, 8, 0, 0)
+topBarCorner.Parent = TopBar
+
+-- عنوان النافذة مع تحسينات التنسيق
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -80, 1, 0)
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "قائمة اللاعبين"
+TitleLabel.TextColor3 = Color3.fromRGB(220, 220, 255)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.TextSize = 16
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TopBar
+
+-- زر الإغلاق X مع تأثيرات
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 35, 1, 0)
+CloseBtn.Position = UDim2.new(1, -35, 0, 0)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.new(1,1,1)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 14
+CloseBtn.Parent = TopBar
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 8)
+closeCorner.Parent = CloseBtn
+
+-- تأثيرات زر الإغلاق
+CloseBtn.MouseEnter:Connect(function()
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 80, 80)
+end)
+
+CloseBtn.MouseLeave:Connect(function()
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+end)
+
+-- زر التصغير - مع تأثيرات
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.new(0, 35, 1, 0)
+MinimizeBtn.Position = UDim2.new(1, -70, 0, 0)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+MinimizeBtn.Text = "-"
+MinimizeBtn.TextColor3 = Color3.new(1,1,1)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 18
+MinimizeBtn.Parent = TopBar
+
+local minimizeCorner = Instance.new("UICorner")
+minimizeCorner.CornerRadius = UDim.new(0, 8)
+minimizeCorner.Parent = MinimizeBtn
+
+-- تأثيرات زر التصغير
+MinimizeBtn.MouseEnter:Connect(function()
+    MinimizeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+end)
+
+MinimizeBtn.MouseLeave:Connect(function()
+    MinimizeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+end)
+
+-- محتوى الإطار (القائمة + الأزرار)
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -10, 1, -45)
+ContentFrame.Position = UDim2.new(0, 5, 0, 40)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+-- زر تحديث القائمة مع تصميم محسن
+local RefreshBtn = Instance.new("TextButton")
+RefreshBtn.Size = UDim2.new(1, 0, 0, 40)
+RefreshBtn.Position = UDim2.new(0, 0, 0, 5)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+RefreshBtn.Text = "🔄 تحديث القائمة"
+RefreshBtn.TextColor3 = Color3.fromRGB(220, 220, 255)
+RefreshBtn.Font = Enum.Font.GothamBold
+RefreshBtn.TextSize = 14
+RefreshBtn.Parent = ContentFrame
+
+local refreshCorner = Instance.new("UICorner")
+refreshCorner.CornerRadius = UDim.new(0, 6)
+refreshCorner.Parent = RefreshBtn
+
+-- تأثيرات زر التحديث
+RefreshBtn.MouseEnter:Connect(function()
+    RefreshBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+end)
+
+RefreshBtn.MouseLeave:Connect(function()
+    RefreshBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+end)
+
+-- Holder للقائمة مع Scroll محسن
+local listHolder = Instance.new("ScrollingFrame")
+listHolder.Size = UDim2.new(1, 0, 1, -50)
+listHolder.Position = UDim2.new(0, 0, 0, 50)
+listHolder.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+listHolder.BorderSizePixel = 0
+listHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
+listHolder.ScrollBarThickness = 6
+listHolder.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 120)
+listHolder.Parent = ContentFrame
+
+local listCorner = Instance.new("UICorner")
+listCorner.CornerRadius = UDim.new(0, 6)
+listCorner.Parent = listHolder
+
+local listLayout = Instance.new("UIListLayout", listHolder)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 8)
+
+-- إضافة تباعد داخلي للقائمة
+local listPadding = Instance.new("UIPadding", listHolder)
+listPadding.PaddingLeft = UDim.new(0, 5)
+listPadding.PaddingRight = UDim.new(0, 5)
+listPadding.PaddingTop = UDim.new(0, 5)
+listPadding.PaddingBottom = UDim.new(0, 5)
+
+-- المتغيرات للتحكم في "بانج"
+local bangLooping = false
+local bangConnection = nil
+
+-- دالة إنشاء أزرار الإجراء لكل لاعب (محسنة)
+local function createActions(target)
+    if ScreenGui:FindFirstChild("ActionFrame") then
+        ScreenGui.ActionFrame:Destroy()
+    end
+
+    local actionFrame = Instance.new("Frame")
+    actionFrame.Name = "ActionFrame"
+    actionFrame.Size = UDim2.new(0, 220, 0, 200)
+    actionFrame.Position = UDim2.new(0.5, 180, 0.3, -100)
+    actionFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    actionFrame.BorderSizePixel = 0
+    actionFrame.Active = true
+    actionFrame.Draggable = true
+    actionFrame.Parent = ScreenGui
+
+    local actionCorner = Instance.new("UICorner")
+    actionCorner.CornerRadius = UDim.new(0, 8)
+    actionCorner.Parent = actionFrame
+
+    -- شريط عنوان نافذة الأفعال
+    local actionTopBar = Instance.new("Frame")
+    actionTopBar.Size = UDim2.new(1, 0, 0, 30)
+    actionTopBar.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    actionTopBar.Parent = actionFrame
+
+    local actionTopCorner = Instance.new("UICorner")
+    actionTopCorner.CornerRadius = UDim.new(0, 8, 0, 0)
+    actionTopCorner.Parent = actionTopBar
+
+    local actionTitle = Instance.new("TextLabel")
+    actionTitle.Size = UDim2.new(1, -40, 1, 0)
+    actionTitle.Position = UDim2.new(0, 10, 0, 0)
+    actionTitle.BackgroundTransparency = 1
+    actionTitle.Text = "أفعال: "..target.Name
+    actionTitle.TextColor3 = Color3.fromRGB(220, 220, 255)
+    actionTitle.Font = Enum.Font.GothamBold
+    actionTitle.TextSize = 14
+    actionTitle.TextXAlignment = Enum.TextXAlignment.Left
+    actionTitle.Parent = actionTopBar
+
+    -- زر إغلاق في نافذة الأفعال
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -30, 0, 0)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    closeBtn.Text = "X"
+    closeBtn.TextColor3 = Color3.new(1,1,1)
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextSize = 14
+    closeBtn.Parent = actionTopBar
+
+    local closeBtnCorner = Instance.new("UICorner")
+    closeBtnCorner.CornerRadius = UDim.new(0, 8)
+    closeBtnCorner.Parent = closeBtn
+
+    closeBtn.MouseButton1Click:Connect(function()
+        actionFrame:Destroy()
+        if bangLooping then
+            bangLooping = false
+            if bangConnection then
+                bangConnection:Disconnect()
+                bangConnection = nil
+            end
+        end
+    end)
+
+    -- تأثيرات زر الإغلاق
+    closeBtn.MouseEnter:Connect(function()
+        closeBtn.BackgroundColor3 = Color3.fromRGB(220, 80, 80)
+    end)
+
+    closeBtn.MouseLeave:Connect(function()
+        closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    end)
+
+    local yPos = 40
+    local buttonWidth = 200
+    local buttonHeight = 35
+    
+    -- زر هيد سيت (جلوس على الرأس)
+    local headSitBtn = Instance.new("TextButton")
+    headSitBtn.Size = UDim2.new(0, buttonWidth, 0, buttonHeight)
+    headSitBtn.Position = UDim2.new(0.5, -buttonWidth/2, 0, yPos)
+    headSitBtn.BackgroundColor3 = Color3.fromRGB(70, 160, 70)
+    headSitBtn.Text = "🪑 هيد سيت (جلوس فوق الرأس)"
+    headSitBtn.TextColor3 = Color3.new(1,1,1)
+    headSitBtn.Font = Enum.Font.GothamBold
+    headSitBtn.TextSize = 14
+    headSitBtn.Parent = actionFrame
+
+    local headSitCorner = Instance.new("UICorner")
+    headSitCorner.CornerRadius = UDim.new(0, 6)
+    headSitCorner.Parent = headSitBtn
+
+    -- تأثيرات زر الهيد سيت
+    headSitBtn.MouseEnter:Connect(function()
+        headSitBtn.BackgroundColor3 = Color3.fromRGB(90, 180, 90)
+    end)
+
+    headSitBtn.MouseLeave:Connect(function()
+        headSitBtn.BackgroundColor3 = Color3.fromRGB(70, 160, 70)
+    end)
+
+    local sitting = false
+    local seatPart = nil
+
+    headSitBtn.MouseButton1Click:Connect(function()
+        if sitting then
+            sitting = false
+            if seatPart then
+                seatPart:Destroy()
+                seatPart = nil
+            end
+            headSitBtn.Text = "🪑 هيد سيت (جلوس فوق الرأس)"
+        else
+            if target.Character and target.Character:FindFirstChild("Head") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = LocalPlayer.Character.HumanoidRootPart
+                local head = target.Character.Head
+
+                seatPart = Instance.new("Seat")
+                seatPart.Name = "TempSeatForHeadSit"
+                seatPart.Anchored = true
+                seatPart.CanCollide = false
+                seatPart.Size = Vector3.new(2,1,2)
+                seatPart.CFrame = head.CFrame * CFrame.new(0, 1.5, 0)
+                seatPart.Transparency = 1
+                seatPart.Parent = workspace
+
+                hrp.CFrame = seatPart.CFrame * CFrame.new(0, 3, 0)
+
+                local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.Sit = true
+                    humanoid.SeatPart = seatPart
+                end
+                sitting = true
+                headSitBtn.Text = "🛑 إيقاف الهيد سيت"
+            end
+        end
+    end)
+
+    yPos = yPos + 45
+
+    -- زر بانج (تلبورت مستمر خلفه)
+    local bangBtn = Instance.new("TextButton")
+    bangBtn.Size = UDim2.new(0, buttonWidth, 0, buttonHeight)
+    bangBtn.Position = UDim2.new(0.5, -buttonWidth/2, 0, yPos)
+    bangBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+    bangBtn.Text = "💥 بانج (تلبورت خلفه)"
+    bangBtn.TextColor3 = Color3.new(1,1,1)
+    bangBtn.Font = Enum.Font.GothamBold
+    bangBtn.TextSize = 14
+    bangBtn.Parent = actionFrame
+
+    local bangCorner = Instance.new("UICorner")
+    bangCorner.CornerRadius = UDim.new(0, 6)
+    bangCorner.Parent = bangBtn
+
+    -- تأثيرات زر البانج
+    bangBtn.MouseEnter:Connect(function()
+        bangBtn.BackgroundColor3 = Color3.fromRGB(220, 90, 90)
+    end)
+
+    bangBtn.MouseLeave:Connect(function()
+        bangBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+    end)
+
+    local function stopBang()
+        bangLooping = false
+        if bangConnection then
+            bangConnection:Disconnect()
+            bangConnection = nil
+        end
+        bangBtn.Text = "💥 بانج (تلبورت خلفه)"
+    end
+
+    bangBtn.MouseButton1Click:Connect(function()
+        if bangLooping then
+            stopBang()
+        else
+            if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                bangLooping = true
+                bangBtn.Text = "⏹ إيقاف البانج"
+
+                bangConnection = RunService.Heartbeat:Connect(function()
+                    if not bangLooping or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") or not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        stopBang()
+                        return
+                    end
+                    local trgHRP = target.Character.HumanoidRootPart
+                    local lpHRP = LocalPlayer.Character.HumanoidRootPart
+                    local behindCFrame = trgHRP.CFrame * CFrame.new(0, 0, 2)
+                    lpHRP.CFrame = behindCFrame
+                end)
+            end
+        end
+    end)
+
+    yPos = yPos + 45
+
+    -- زر تليبورت عادي
+    local teleportBtn = Instance.new("TextButton")
+    teleportBtn.Size = UDim2.new(0, buttonWidth, 0, buttonHeight)
+    teleportBtn.Position = UDim2.new(0.5, -buttonWidth/2, 0, yPos)
+    teleportBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 210)
+    teleportBtn.Text = "⚡ تليبورت إليه"
+    teleportBtn.TextColor3 = Color3.new(1,1,1)
+    teleportBtn.Font = Enum.Font.GothamBold
+    teleportBtn.TextSize = 14
+    teleportBtn.Parent = actionFrame
+
+    local teleportCorner = Instance.new("UICorner")
+    teleportCorner.CornerRadius = UDim.new(0, 6)
+    teleportCorner.Parent = teleportBtn
+
+    -- تأثيرات زر التليبورت
+    teleportBtn.MouseEnter:Connect(function()
+        teleportBtn.BackgroundColor3 = Color3.fromRGB(90, 150, 230)
+    end)
+
+    teleportBtn.MouseLeave:Connect(function()
+        teleportBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 210)
+    end)
+
+    teleportBtn.MouseButton1Click:Connect(function()
+        if target.Character and target.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
+        end
+    end)
+
+    return actionFrame
+end
+
+-- دالة إضافة لاعب للقائمة (محسنة)
+local function addPlayerToList(plr)
+    if plr == LocalPlayer then return end
+
+    local plrBtn = Instance.new("TextButton")
+    plrBtn.Size = UDim2.new(1, -10, 0, 60)
+    plrBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    plrBtn.TextColor3 = Color3.new(1,1,1)
+    plrBtn.Text = ""
+    plrBtn.AutoButtonColor = false
+    plrBtn.Parent = listHolder
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.Parent = plrBtn
+
+    -- تأثيرات زر اللاعب
+    plrBtn.MouseEnter:Connect(function()
+        plrBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    end)
+
+    plrBtn.MouseLeave:Connect(function()
+        plrBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    end)
+
+    -- صورة البروفايل مع إطار دائري
+    local thumb = Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+    local imgFrame = Instance.new("Frame")
+    imgFrame.Size = UDim2.new(0, 50, 0, 50)
+    imgFrame.Position = UDim2.new(0, 5, 0.5, -25)
+    imgFrame.BackgroundTransparency = 1
+    imgFrame.Parent = plrBtn
+
+    local imgCorner = Instance.new("UICorner")
+    imgCorner.CornerRadius = UDim.new(1, 0)
+    imgCorner.Parent = imgFrame
+
+    local img = Instance.new("ImageLabel")
+    img.Size = UDim2.new(1, 0, 1, 0)
+    img.Image = thumb
+    img.BackgroundTransparency = 1
+    img.ScaleType = Enum.ScaleType.Crop
+    img.Parent = imgFrame
+
+    -- اسم اللاعب مع تحسينات
+    local nameLbl = Instance.new("TextLabel")
+    nameLbl.Size = UDim2.new(1, -70, 0.6, 0)
+    nameLbl.Position = UDim2.new(0, 65, 0.1, 0)
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Text = plr.DisplayName
+    nameLbl.TextColor3 = Color3.fromRGB(240, 240, 255)
+    nameLbl.TextScaled = true
+    nameLbl.Font = Enum.Font.GothamBold
+    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+    nameLbl.Parent = plrBtn
+
+    -- اسم المستخدم (Username)
+    local usernameLbl = Instance.new("TextLabel")
+    usernameLbl.Size = UDim2.new(1, -70, 0.3, 0)
+    usernameLbl.Position = UDim2.new(0, 65, 0.6, 0)
+    usernameLbl.BackgroundTransparency = 1
+    usernameLbl.Text = "@"..plr.Name
+    usernameLbl.TextColor3 = Color3.fromRGB(180, 180, 200)
+    usernameLbl.TextScaled = true
+    usernameLbl.Font = Enum.Font.Gotham
+    usernameLbl.TextXAlignment = Enum.TextXAlignment.Left
+    usernameLbl.Parent = plrBtn
+
+    plrBtn.MouseButton1Click:Connect(function()
+        createActions(plr)
+    end)
+end
+
+-- تحديث القائمة
+local function refreshPlayers()
+    for _, child in pairs(listHolder:GetChildren()) do
+        if not child:IsA("UIListLayout") then
+            child:Destroy()
+        end
+    end
+    
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            addPlayerToList(plr)
+        end
+    end
+    
+    local contentSize = listLayout.AbsoluteContentSize.Y
+    listHolder.CanvasSize = UDim2.new(0, 0, 0, contentSize + 10)
+end
+
+-- تنفيذ التحديث عند الضغط على زر التحديث
+RefreshBtn.MouseButton1Click:Connect(refreshPlayers)
+
+-- تعبئة القائمة أول مرة
+refreshPlayers()
+
+-- زر الإغلاق
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- زر التصغير
+local isMinimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+    if not isMinimized then
+        MainFrame.Size = UDim2.new(MainFrame.Size.X.Scale, MainFrame.Size.X.Offset, 0, 35)
+        ContentFrame.Visible = false
+        isMinimized = true
+    else
+        MainFrame.Size = UDim2.new(MainFrame.Size.X.Scale, MainFrame.Size.X.Offset, 0, 450)
+        ContentFrame.Visible = true
+        isMinimized = false
+    end
+end)
+
+-- إظهار/إخفاء الواجهة بزر K
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        ScreenGui.Enabled = not ScreenGui.Enabled
+    end
+end)
+
+-- تنظيف "بانج" إذا غادر اللاعب أو تدمرت الواجهة
+Players.PlayerRemoving:Connect(function(p)
+    if bangLooping and ScreenGui:FindFirstChild("ActionFrame") then
+        bangLooping = false
+        if bangConnection then
+            bangConnection:Disconnect()
+            bangConnection = nil
+        end
+    end
+end)
+
+-- إضافة الواجهة الرئيسية إلى ScreenGui بعد تعبئة كل العناصر
+MainFrame.Parent = ScreenGui
